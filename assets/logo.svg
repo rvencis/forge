@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="220" height="36" viewBox="0 0 220 36" role="img" aria-label="Rvencis Forge">
+  <g fill="none" stroke="#df7afe" stroke-width="2.2" stroke-linecap="round">
+    <line x1="17" y1="18" x2="31" y2="18"/>
+    <line x1="43" y1="18" x2="57" y2="18"/>
+  </g>
+  <circle cx="12" cy="18" r="5" fill="#0d0d0d" stroke="#814ac8" stroke-width="2.2"/>
+  <circle cx="37" cy="18" r="8" fill="#814ac8" stroke="#df7afe" stroke-width="2.2"/>
+  <circle cx="62" cy="18" r="5" fill="#0d0d0d" stroke="#814ac8" stroke-width="2.2"/>
+  <text x="76" y="25" font-family="Figtree, Segoe UI, sans-serif" font-size="19" font-weight="700" letter-spacing="-0.4" fill="#ffffff">Rvencis<tspan fill="#df7afe"> Forge</tspan></text>
+</svg>

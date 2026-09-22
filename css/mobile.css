@@ -1,0 +1,137 @@
+/* ============================================================
+   n8n Academy — mobile-only refinements (css/mobile.css)
+   Loaded after styles.css and lms.css. Every rule lives inside
+   a @media query, so the desktop design is untouched — these
+   blocks only de-clutter small screens.
+   Breakpoints mirror the base sheets: 1024 / 920 / 810 / 720 / 640 / 480.
+   ============================================================ */
+
+/* ---------- ≤1024px: tablets / lesson shell ---------- */
+@media (max-width: 1024px) {
+  /* Lesson runner: the whole course tree collapses behind one toggle
+     bar so the lesson content starts immediately. The button is
+     rendered by js/lesson.js and hidden on desktop (rule below). */
+  .side-toggle {
+    display: flex; align-items: center; gap: 10px; width: 100%;
+    padding: 12px 14px; margin: 0;
+    background: var(--dark-surface-2); border: 1px solid var(--dark-border);
+    border-radius: var(--radius-md); cursor: pointer; text-align: left;
+    color: var(--text-primary); font-family: var(--font-family);
+    font-size: var(--font-size-sm); font-weight: 600;
+    transition: border-color 0.2s ease;
+  }
+  .side-toggle:hover { border-color: var(--primary-color); }
+  .side-toggle-title { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .side-toggle-meta { color: var(--text-muted); font-weight: 500; font-size: var(--font-size-xs); white-space: nowrap; }
+  .side-toggle-chevron { display: inline-flex; color: var(--text-muted); transition: transform 0.3s ease; }
+  .lesson-sidebar:not(.is-collapsed) .side-toggle-chevron { transform: rotate(180deg); }
+  .lesson-sidebar.is-collapsed .side-card { display: none; }
+  .lesson-sidebar { padding: var(--space-sm); }
+  .lesson-shell { gap: var(--space-lg); padding-top: calc(66px + var(--space-lg)); }
+  /* per-lesson minutes are noise in a collapsed-first tree */
+  .side-mins { display: none; }
+}
+
+@media (min-width: 1025px) {
+  /* Safety net: the toggle must never render in the desktop layout. */
+  .side-toggle { display: none; }
+}
+
+/* ---------- ≤920px: course detail, two columns → one ---------- */
+@media (max-width: 920px) {
+  .course-detail-grid { grid-template-columns: 1fr; gap: var(--space-xl); }
+  /* Reorder without touching the DOM: the enrollment/CTA card sits
+     right under the course head; related courses stay after the
+     main column. Degrades to plain stacking if unsupported. */
+  .course-side { display: contents; }
+  #course-side { order: -1; }
+}
+
+/* ---------- ≤810px: navbar ---------- */
+@media (max-width: 810px) {
+  .nav-container { gap: 8px; padding: 10px var(--space-lg); }
+  /* With .nav-menu hidden, space-between used to float the actions
+     mid-bar; group them next to the burger instead. */
+  .nav-actions { margin-left: auto; }
+  .logo-text { font-size: var(--font-size-lg); }
+  /* Dropdown menu: full-width rows with comfortable tap targets. */
+  .nav-menu { padding: 2px var(--space-lg) 10px; }
+  .nav-menu .nav-link { display: block; padding: 11px 2px; border-bottom: 1px solid var(--dark-border-soft); }
+  .nav-menu li:last-child .nav-link { border-bottom: 0; }
+}
+
+/* ---------- ≤720px: catalog ---------- */
+@media (max-width: 720px) {
+  .catalog-bar { gap: var(--space-sm); }
+  .catalog-bar select { width: 100%; }
+  /* Filter groups become swipeable rows instead of wrapping into
+     ~4 rows of chips. */
+  .catalog-bar .filters {
+    flex-wrap: nowrap; overflow-x: auto;
+    margin: 0 -4px; padding: 2px 4px;
+    scrollbar-width: none; -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x proximity;
+  }
+  .catalog-bar .filters::-webkit-scrollbar { display: none; }
+  .catalog-bar .chip { flex: 0 0 auto; padding: 9px 14px; scroll-snap-align: start; }
+}
+
+/* ---------- ≤640px: vertical rhythm, hero, footer, lesson nav ---------- */
+@media (max-width: 640px) {
+  section { padding: var(--space-2xl) 0; }
+  .page-hero { padding-top: calc(66px + var(--space-2xl)); padding-bottom: var(--space-xl); }
+  .page-hero.slim { padding-top: calc(66px + var(--space-lg)); }
+  main > :where(section:first-child) { padding-top: calc(66px + var(--space-2xl)); }
+  .section-header { margin-bottom: var(--space-xl); }
+  .hero-badge, .hero-badge1 { margin-bottom: 1rem; }
+  /* Hero: stop forcing a full viewport; stack the CTAs. */
+  .hero { min-height: auto; padding: calc(66px + var(--space-xl)) var(--space-lg) var(--space-2xl); }
+  .hero-subtitle { font-size: 16px; margin-bottom: 1.4rem; }
+  .hero-buttons { gap: var(--space-sm); }
+  .hero-stats { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-lg) var(--space-md); margin-top: var(--space-xl); }
+  .cta { padding: 40px 20px; }
+  /* Footer: two compact columns instead of one long column. */
+  .footer { padding: 32px 0 20px; }
+  .footer-content { grid-template-columns: 1fr 1fr; gap: var(--space-lg) var(--space-md); margin-bottom: var(--space-lg); }
+  .footer-tagline { margin-bottom: var(--space-lg); }
+  .footer-bottom { font-size: 13px; }
+  /* Lesson prev / complete / next stack cleanly, full width. */
+  .lesson-nav { display: grid; gap: var(--space-sm); }
+  .lesson-nav .btn { width: 100%; }
+  .lesson-nav .is-right { margin-left: 0; }
+  .lesson-pills { gap: 6px; }
+  .benefit-card, .feature-item { padding: var(--space-lg); }
+}
+
+/* ---------- ≤480px: phones ---------- */
+@media (max-width: 480px) {
+  .panel, .side-card { padding: var(--space-lg); }
+  .course-head-flex { gap: var(--space-md); }
+  .course-hero-thumb { width: 84px; height: 84px; }
+  .course-hero-thumb svg { width: 24px; height: 24px; }
+  .course-thumb { min-height: 84px; padding: var(--space-md); }
+  .course-body { padding: var(--space-md); }
+  /* Syllabus rows: the type chip wraps under the title so the row
+     never crams four columns into ~360px. */
+  .syllabus-lesson { grid-template-columns: 22px minmax(0, 1fr) auto; row-gap: 4px; padding: 11px 10px; }
+  .syllabus-lesson .type-chip { grid-column: 2; grid-row: 2; justify-self: start; }
+  .syllabus-lesson .s-min { grid-column: 3; grid-row: 1; }
+  .accordion-header { padding: 14px var(--space-md); gap: var(--space-sm); }
+  .accordion-body { padding: 4px var(--space-md) var(--space-md); }
+  .ex-block { padding: var(--space-lg); }
+  .node-mock { padding: var(--space-md); }
+  .wf-canvas { padding: var(--space-md); }
+  .quiz-opt { padding: 12px; }
+  .instructor-card { gap: var(--space-md); }
+  .dash-stat-value { font-size: 1.5rem; }
+  .dash-grid { gap: var(--space-md); }
+  .continue-card { gap: var(--space-md); padding: var(--space-md); }
+  .badge-grid { grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); }
+  .cert-inner { padding: var(--space-xl) var(--space-md); }
+  .cert-stats { gap: var(--space-lg); }
+  .nav-xp { padding: 5px 9px; font-size: 12px; }
+  .nav-actions { gap: 6px; }
+  /* Toasts become full-width bottom strips. */
+  .toast-host { left: 16px; right: 16px; bottom: 16px; }
+  .toast { max-width: none; width: 100%; }
+}

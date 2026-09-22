@@ -1,0 +1,16 @@
+{
+  "name": "Rvencis Forge — Learn n8n by building",
+  "short_name": "Rvencis Forge",
+  "description": "Interactive n8n courses with hands-on exercises: build workflows, write expressions and master automation in your browser.",
+  "id": "https://rvencis.github.io/n8n-academy/",
+  "start_url": "index.html",
+  "scope": "./",
+  "display": "browser",
+  "background_color": "#0d0d0d",
+  "theme_color": "#0d0d0d",
+  "lang": "en",
+  "icons": [
+    { "src": "assets/ficon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "assets/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

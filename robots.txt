@@ -1,0 +1,8 @@
+# Rvencis Forge — learn n8n by building
+# https://rvencis.github.io/n8n-academy/
+
+User-agent: *
+Allow: /
+
+# Update the host below if you deploy under a different domain/path.
+Sitemap: https://rvencis.github.io/n8n-academy/sitemap.xml
