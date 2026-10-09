@@ -34,6 +34,7 @@
       completed: {},         /* { '<course>/<lesson>': timestamp } */
       scores: {},            /* { '<course>/<lesson>': { pct, attempts } } */
       attempts: {},          /* { '<course>/<lesson>': { correct, firstTryCorrect } } */
+      steps: {},             /* { '<course>/<lesson>': { watch, practice, quiz } — timestamps per step */
       badges: [],            /* [badgeId,...] */
       days: {},              /* { 'YYYY-MM-DD': activityCount } */
       streak: { count: 0, best: 0, lastDay: null },
@@ -177,7 +178,8 @@
             scores: cloudState.scores,
             attempts: cloudState.attempts,
             badges: cloudState.badges,
-            lastLesson: cloudState.lastLesson
+            lastLesson: cloudState.lastLesson,
+            steps: cloudState.steps
           }
         }
       });
@@ -251,6 +253,7 @@
     var fmeta = meta.forge || {};
     if (fmeta.scores && typeof fmeta.scores === 'object') state.scores = fmeta.scores;
     if (fmeta.attempts && typeof fmeta.attempts === 'object') state.attempts = fmeta.attempts;
+    if (fmeta.steps && typeof fmeta.steps === 'object') state.steps = fmeta.steps;
     if (Array.isArray(fmeta.badges)) state.badges = fmeta.badges.slice();
     if (!state.lastLesson && fmeta.lastLesson) state.lastLesson = fmeta.lastLesson;
 
@@ -438,6 +441,21 @@
           ? (ca.firstTryCorrect && la.firstTryCorrect) : la.firstTryCorrect;
       }
     });
+    /* step progress: union — take whichever side recorded each step */
+    Object.keys(local.steps || {}).forEach(function (key) {
+      var ls = local.steps[key] || {};
+      var cs = state.steps[key];
+      if (!cs) { state.steps[key] = Object.assign({}, ls); return; }
+      ['watch', 'practice', 'quiz'].forEach(function (s) {
+        if (!cs[s] && ls[s]) cs[s] = ls[s];
+      });
+      /* union of ticked self-check items */
+      if (Array.isArray(ls.checklist)) {
+        cs.checklist = (Array.isArray(cs.checklist) ? cs.checklist : [])
+          .concat(ls.checklist.filter(function (i) { return cs.checklist.indexOf(i) === -1; }))
+          .sort(function (a, b) { return a - b; });
+      }
+    });
     (local.badges || []).forEach(function (id) {
       if (state.badges.indexOf(id) === -1) state.badges.push(id);
     });
@@ -567,6 +585,56 @@
       if (!state.completed[course.slug + '/' + list[i].lesson.slug]) return list[i];
     }
     return null;
+  }
+
+  /* ---------- step machine (watch ➔ practice ➔ quiz) ----------
+     A lesson's three views are recorded independently so the router can
+     resume the learner at the furthest unlocked step. Completion itself
+     stays gated on the quiz (see js/steps.js calling markLessonComplete). */
+  function recordStep(courseSlug, lessonSlug, step) {
+    return patch(function (state) {
+      var key = courseSlug + '/' + lessonSlug;
+      var steps = state.steps || (state.steps = {});
+      var entry = steps[key] || (steps[key] = {});
+      if (!entry[step]) entry[step] = Date.now();
+    }, courseSlug + '/' + lessonSlug);
+  }
+
+  /* { watch, practice, quiz } as booleans for one lesson. */
+  function stepState(courseSlug, lessonSlug) {
+    var steps = read().steps || {};
+    var entry = steps[courseSlug + '/' + lessonSlug] || {};
+    return { watch: !!entry.watch, practice: !!entry.practice, quiz: !!entry.quiz };
+  }
+
+  /* Partial self-check state lives inside the same steps entry (so it rides
+     the existing cloud-metadata persistence for free). */
+  function recordChecklist(courseSlug, lessonSlug, indices) {
+    return patch(function (state) {
+      var key = courseSlug + '/' + lessonSlug;
+      var steps = state.steps || (state.steps = {});
+      var entry = steps[key] || (steps[key] = {});
+      entry.checklist = (indices || []).slice().sort(function (a, b) { return a - b; });
+    }, courseSlug + '/' + lessonSlug);
+  }
+
+  function checklistState(courseSlug, lessonSlug) {
+    var entry = (read().steps || {})[courseSlug + '/' + lessonSlug] || {};
+    return Array.isArray(entry.checklist) ? entry.checklist.slice() : [];
+  }
+
+  /* Gating: a lesson unlocks when it is the first in the catalog or its
+     predecessor is complete. The first lesson is always open. */
+  function isUnlocked(courseSlug, lessonSlug) {
+    var course = (global.Data && Data.getCourse(courseSlug)) || null;
+    if (!course) return true;
+    var list = Data.flatten(course);
+    var i = -1;
+    for (var n = 0; n < list.length; n++) {
+      if (list[n].lesson.slug === lessonSlug) { i = n; break; }
+    }
+    if (i <= 0) return true;
+    return isComplete(courseSlug, list[i - 1].lesson.slug);
   }
 
   /* ---------- badges ---------- */
@@ -726,6 +794,11 @@
     isComplete: isComplete,
     courseProgress: courseProgress,
     nextIncomplete: nextIncomplete,
+    recordStep: recordStep,
+    stepState: stepState,
+    recordChecklist: recordChecklist,
+    checklistState: checklistState,
+    isUnlocked: isUnlocked,
     levelFor: levelFor,
     earnedBadges: earnedBadges,
     exportData: exportData,

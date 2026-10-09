@@ -36,12 +36,16 @@ function load(rel) {
 /* order matters: base libs, then data, then engines */
 ['js/data.js', 'js/ui.js', 'js/store.js'].forEach(load);
 ['data/courses.js', 'data/paths.js'].forEach(load);
-['data/lessons/n8n-fundamentals.js', 'data/lessons/expressions-data-mapping.js',
+['data/lessons/n8n-fundamentals.js', 'data/lessons/n8n-fundamentals-steps.js',
+ 'data/lessons/expressions-data-mapping.js',
  'data/lessons/http-and-apis.js', 'data/lessons/webhooks-and-forms.js',
  'data/lessons/data-pipelines.js', 'data/lessons/ai-agents-n8n.js',
  'data/lessons/misc-courses.js'].forEach(load);
 load('js/exercises.js');
+load('js/simulator.js');   /* layers 1-2 are DOM-free, so this loads in plain Node */
 
 const Data = win.Data, Lessons = win.N8N_LESSONS, Exercises = win.Exercises;
+const Steps = win.N8N_STEPS || {};
+const Simulator = win.Simulator;
 const TYPES = Exercises.TYPES;
-module.exports = { Data, Lessons, Exercises, TYPES, win };
+module.exports = { Data, Lessons, Exercises, Steps, Simulator, TYPES, win };

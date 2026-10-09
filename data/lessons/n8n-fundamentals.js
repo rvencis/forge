@@ -56,8 +56,8 @@
   L['n8n-fundamentals/first-workflow'] = {
     blocks: [
       { t: 'p', html: 'Time to build. The classic first workflow: <strong>read items from a source, reshape them, hand them to the next step</strong>. In this exercise you assemble the graph — no node editor needed.' },
-      { t: 'callout', variant: 'tip', title: 'How these exercises work',
-        html: 'Click nodes in the palette to place them, then click node A and node B to connect them. Your goal is to match the target structure below.' },
+      { t: 'callout', variant: 'tip', title: 'How the practice canvas works',
+        html: 'Click a node in the palette to drop it on the canvas, then <strong>drag from one handle to another</strong> to connect them. The Requirements panel ticks itself off as the topology matches the target below.' },
       { t: 'h', text: 'The target' },
       { t: 'list', items: [
         '<strong>Manual Trigger</strong> starts the run (you press "Execute workflow").',
@@ -65,28 +65,7 @@
         '<strong>HTTP Request</strong> POSTs the cleaned items to an API.'
       ] },
       { t: 'figure', svg: 'flow-basic', caption: 'Trigger → transform → send: the pattern behind most automations' }
-    ],
-    exercise: {
-      type: 'workflow',
-      brief: 'Build the 3-node workflow: Manual Trigger → Edit Fields (Set) → HTTP Request, connected left to right.',
-      palette: [
-        { key: 'manualTrigger', type: 'n8n-nodes-base.manualTrigger', label: 'Manual Trigger' },
-        { key: 'set',          type: 'n8n-nodes-base.set',           label: 'Edit Fields (Set)' },
-        { key: 'http',         type: 'n8n-nodes-base.httpRequest',   label: 'HTTP Request' },
-        { key: 'webhook',      type: 'n8n-nodes-base.webhook',       label: 'Webhook (decoy)' },
-        { key: 'code',         type: 'n8n-nodes-base.code',          label: 'Code (decoy)' }
-      ],
-      target: {
-        nodes: ['manualTrigger', 'set', 'http'],
-        edges: [['manualTrigger', 'set'], ['set', 'http']]
-      },
-      flow: {
-        'manualTrigger': { in: 1, out: 1 },
-        'set': { in: 1, out: 1 },
-        'http': { in: 1, out: 1 }
-      },
-      explanation: 'Triggers start flows; Edit Fields (Set) reshapes items in place; HTTP Request is the standard way to send data onward. The Webhook would *receive* events, and the Code node is overkill for simple reshaping.'
-    }
+    ]
   };
 
   /* ---- checkpoint-triggers quiz ---- */
@@ -287,23 +266,22 @@
       ] },
       { t: 'callout', variant: 'tip', title: 'Do you even need it?',
         html: 'If a single node action handles every item (e.g. one HTTP call per item), let automatic iteration do the work. Reach for batches only when the <em>group</em> matters.' }
-    ],
-    exercise: {
-      type: 'workflow',
-      brief: 'Build a paced loop: Schedule Trigger → Loop Over Items → HTTP Request, with HTTP Request looping back into Loop Over Items.',
-      palette: [
-        { key: 'trigger', type: 'n8n-nodes-base.scheduleTrigger', label: 'Schedule Trigger' },
-        { key: 'loop',    type: 'n8n-nodes-base.splitInBatches',  label: 'Loop Over Items' },
-        { key: 'http',    type: 'n8n-nodes-base.httpRequest',     label: 'HTTP Request' },
-        { key: 'set',     type: 'n8n-nodes-base.set',             label: 'Edit Fields (Set) (decoy)' }
-      ],
-      target: {
-        nodes: ['trigger', 'loop', 'http'],
-        edges: [['trigger', 'loop'], ['loop', 'http'], ['http', 'loop']]
-      },
-      flow: { trigger: { in: 1, out: 1 }, loop: { in: 1, out: 1 }, http: { in: 1, out: 1 } },
-      explanation: 'The loop-back edge from HTTP Request into Loop Over Items is what makes it a loop: each batch flows through the body, then returns for the next.'
-    }
+    ]
+  };
+
+  /* ---- merging-branches (reading) ---- */
+  L['n8n-fundamentals/merging-branches'] = {
+    blocks: [
+      { t: 'p', html: 'Branches multiply your options — but at some point they need to reunite. <strong>Merge</strong> nodes bring parallel paths back into one stream.' },
+      { t: 'list', items: [
+        '<strong>Append</strong> — stacks every item from every input, in order.',
+        '<strong>Keep</strong> — keeps items from a specific input and discards the rest.',
+        '<strong>Wait for all</strong> — holds the merge until every input has produced at least one item, then combines them.'
+      ] },
+      { t: 'callout', variant: 'tip', title: 'Mind the data shape',
+        html: 'Items from different branches may carry different fields. Merge does not unify schemas; downstream nodes must handle missing keys — use Edit Fields (Set) to normalise before merging if needed.' },
+      { t: 'p', html: 'Merge is how you bring an alert branch and a "silent" branch back together after an If, or combine results from two parallel lookups.' }
+    ]
   };
 
   L['n8n-fundamentals/schedule-trigger'] = {
@@ -331,6 +309,30 @@
       explanation: 'A daily schedule with "days between runs = 1" and hour = 9 fires once per day at 09:00 instance time.'
     }
   };
+
+  /* ---- activation-executions (reading) ---- */
+  L['n8n-fundamentals/activation-executions'] = {
+    blocks: [
+      { t: 'p', html: 'A workflow does nothing for the outside world until it is <strong>Active</strong>. The Active toggle is what turns a draft into a live automation.' },
+      { t: 'list', items: [
+        '<strong>Active</strong> — webhooks start listening and schedules begin firing.',
+        '<strong>Inactive</strong> — safe to edit; no external events trigger it.',
+        '<strong>Executions</strong> tab — every run is recorded with its status, duration and data.'
+      ] },
+      { t: 'table', head: ['Status', 'What it means'], rows: [
+        ['Success', 'Every node finished without error'],
+        ['Error', 'A node failed — open the execution to see which one'],
+        ['Waiting', 'Paused on a Wait node or manual approval']
+      ] },
+      { t: 'callout', variant: 'warn', title: 'Test before you activate',
+        html: 'Use the <strong>Test step</strong> button on individual nodes while building. Activating a broken workflow can send bad data to real integrations — preview first.' },
+      { t: 'checklist', items: [
+        'I know a workflow must be Active to respond to webhooks and schedules',
+        'I can find and inspect a past execution'
+      ] }
+    ]
+  };
+
   /* ---- remaining authored lessons (part 2 of 2) ---- */
   L['n8n-fundamentals/webhooks'] = {
     blocks: [
@@ -341,56 +343,29 @@
         'The incoming body, headers and query params arrive on the trigger item\'s <code>json</code>.'
       ] },
       { t: 'figure', svg: 'flow-webhook', caption: 'Webhook → parse → respond: the inbound mirror of the first-workflow pattern' }
-    ],
-    exercise: {
-      type: 'workflow',
-      brief: 'Build: Webhook → Edit Fields (Set) → Respond to Webhook.',
-      palette: [
-        { key: 'webhook', type: 'n8n-nodes-base.webhook',         label: 'Webhook' },
-        { key: 'set',     type: 'n8n-nodes-base.set',             label: 'Edit Fields (Set)' },
-        { key: 'respond', type: 'n8n-nodes-base.respondToWebhook', label: 'Respond to Webhook' },
-        { key: 'http',    type: 'n8n-nodes-base.httpRequest',     label: 'HTTP Request (decoy)' }
-      ],
-      target: {
-        nodes: ['webhook', 'set', 'respond'],
-        edges: [['webhook', 'set'], ['set', 'respond']]
-      },
-      flow: { webhook: { in: 1, out: 1 }, set: { in: 1, out: 1 }, respond: { in: 1, out: 1 } },
-      explanation: 'Webhook receives, Set shapes the response payload, Respond to Webhook sends it back to the caller with your chosen status code.'
-    }
+    ]
   };
 
   L['n8n-fundamentals/final-project'] = {
     blocks: [
-      { t: 'p', html: 'Everything you learned in one workflow: a <strong>daily digest</strong>.' },
+      { t: 'p', html: 'Everything you learned in one production-shaped workflow: the <strong>Order Anomaly Engine</strong>. It sweeps incoming orders and flags the ones that break your business rules — runaway totals, failed payments, suspicious volume.' },
       { t: 'h', text: 'The spec' },
       { t: 'list', items: [
-        '<strong>Schedule Trigger</strong> — every morning at 08:00.',
-        '<strong>HTTP Request</strong> — fetch yesterday\'s records from an API.',
-        '<strong>Edit Fields (Set)</strong> — keep only title and status.',
-        '<strong>If</strong> — separate items where <code>status === "failed"</code>.',
-        '<strong>HTTP Request</strong> — POST the failures to a webhook for alerting.'
+        '<strong>Schedule Trigger</strong> — every 15 minutes, so anomalies surface the same day.',
+        '<strong>HTTP Request</strong> — fetch today\'s orders from your store\'s API.',
+        '<strong>Edit Fields (Set)</strong> — keep only <code>id</code>, <code>total</code>, <code>status</code> and <code>customer.email</code>.',
+        '<strong>If</strong> — route items where <code>total</code> is above 5000, or <code>status === "refunded"</code>, to the true branch.',
+        '<strong>Webhook</strong> — POST each anomaly to your alert endpoint (Slack, PagerDuty or your own service).'
       ] },
       { t: 'callout', variant: 'tip', title: 'Build order',
-        html: 'Trigger first, then run it with pinned sample data and add one node at a time — executing after every addition catches mistakes while they are cheap.' }
-    ],
-    exercise: {
-      type: 'workflow',
-      brief: 'Assemble the digest skeleton: Schedule Trigger → HTTP Request → Edit Fields (Set) → If.',
-      palette: [
-        { key: 'trigger', type: 'n8n-nodes-base.scheduleTrigger', label: 'Schedule Trigger' },
-        { key: 'http',    type: 'n8n-nodes-base.httpRequest',     label: 'HTTP Request' },
-        { key: 'set',     type: 'n8n-nodes-base.set',             label: 'Edit Fields (Set)' },
-        { key: 'if',      type: 'n8n-nodes-base.if',              label: 'If' },
-        { key: 'webhook', type: 'n8n-nodes-base.webhook',         label: 'Webhook (decoy)' }
-      ],
-      target: {
-        nodes: ['trigger', 'http', 'set', 'if'],
-        edges: [['trigger', 'http'], ['http', 'set'], ['set', 'if']]
-      },
-      flow: { trigger: { in: 1, out: 1 }, http: { in: 1, out: 1 }, set: { in: 1, out: 1 }, if: { in: 1, out: 1 } },
-      explanation: 'This is the linear fetch → clean → decide spine; the If node\'s two outputs would then feed the alert branch and the "all good" branch.'
-    }
+        html: 'Trigger first, then run it with pinned sample data and add one node at a time — executing after every addition catches mistakes while they are cheap.' },
+      { t: 'callout', variant: 'info', title: 'Why a schedule instead of a webhook here',
+        html: 'A webhook reacts to each order one at a time; a scheduled sweep re-checks the whole day\'s batch (and can re-notify on orders whose status changed). Pick the trigger that matches your alerting policy.' },
+      { t: 'checklist', items: [
+        'I can rebuild the fetch → clean → decide → alert spine from memory',
+        'I know which node in my build carries the anomaly condition'
+      ] }
+    ]
   };
   /*@@LESSONS@@*/
 })(window);

@@ -1,0 +1,605 @@
+/* ============================================================
+   Rvencis Forge — css/steps.css
+   The DataCamp-style focus shell for the lesson step runner
+   (js/steps.js): minimal top bar, Video ➔ Practice ➔ Quiz views
+   and the pass/fail gate. Loaded only on lesson.html via
+   build.py's head_extra, so catalog/marketing pages are untouched.
+   ============================================================ */
+
+/* ---------- focus mode: kill every piece of site chrome ---------- */
+body.lesson-focus { background: var(--dark-bg); }
+body.lesson-focus .navbar,
+body.lesson-focus .footer,
+body.lesson-focus .lesson-sidebar { display: none !important; }
+
+.focus-shell { min-height: 100vh; }
+
+/* ---------- minimal top bar ---------- */
+.focus-bar {
+  position: sticky; top: 0; z-index: 60;
+  display: grid; grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center; gap: var(--space-lg);
+  padding: 10px clamp(14px, 3vw, 28px);
+  background: rgba(13, 13, 13, 0.86);
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--dark-border);
+}
+.focus-exit {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 8px 14px; border-radius: 999px;
+  border: 1px solid var(--dark-border); background: var(--dark-surface-2);
+  color: var(--text-secondary); font-size: var(--font-size-sm); font-weight: 600;
+  text-decoration: none; transition: border-color .2s ease, color .2s ease;
+}
+.focus-exit:hover { border-color: var(--primary-color); color: var(--text-primary); }
+.focus-exit .icon { transform: scaleX(-1); } /* point back towards the course */
+
+.focus-mid { display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 0; }
+.focus-label {
+  font-size: var(--font-size-sm); font-weight: 600; color: var(--text-primary);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.focus-sep { color: var(--text-muted); margin: 0 2px; }
+.focus-done {
+  display: inline-flex; align-items: center; gap: 3px;
+  color: var(--success); font-weight: 700; margin-left: 4px;
+}
+
+/* segmented 3-step bar */
+.step-progress { display: flex; gap: 6px; width: min(280px, 40vw); }
+.step-dot {
+  flex: 1; height: 6px; border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  transition: background .3s ease;
+}
+.step-dot.is-done { background: rgba(129, 74, 200, 0.55); }
+.step-dot.is-active {
+  background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+  box-shadow: 0 0 10px rgba(223, 122, 254, 0.45);
+}
+
+.focus-stats { display: flex; gap: 8px; }
+.focus-chip {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 6px 11px; border-radius: 999px;
+  background: var(--dark-surface-2); border: 1px solid var(--dark-border);
+  color: var(--text-secondary); font-size: var(--font-size-xs); font-weight: 700;
+  white-space: nowrap;
+}
+.focus-chip .icon { color: var(--secondary-color); }
+
+/* ---------- view frame ---------- */
+.focus-main {
+  max-width: 960px; margin: 0 auto;
+  padding: clamp(24px, 4vw, 44px) clamp(16px, 3vw, 24px) 96px;
+}
+.step-view { display: flex; flex-direction: column; gap: var(--space-xl); }
+.step-back {
+  align-self: flex-start;
+  display: inline-flex; align-items: center; gap: 6px;
+  color: var(--text-muted); font-size: var(--font-size-sm); font-weight: 600;
+  text-decoration: none;
+}
+.step-back .icon { transform: scaleX(-1); }
+.step-back:hover { color: var(--text-primary); }
+
+.step-head { display: flex; flex-direction: column; gap: var(--space-sm); }
+.step-title {
+  font-size: clamp(1.7rem, 4vw, 2.5rem); letter-spacing: -0.03em;
+  line-height: 1.1; margin: 4px 0 0;
+}
+.step-concept { color: var(--text-secondary); font-size: var(--font-size-lg); line-height: 1.65; }
+.step-concept p { margin: 0 0 0.7em; }
+.step-concept p:last-child { margin-bottom: 0; }
+.step-concept code, .takeaways code, .task-steps code {
+  background: rgba(129, 74, 200, 0.16); padding: 1px 6px; border-radius: 4px;
+  font-size: 0.9em;
+}
+
+/* ---------- Page A: 16:9 video placeholder ---------- */
+.video-card {
+  border: 1px solid var(--dark-border); border-radius: var(--radius-xl);
+  background: var(--dark-surface); padding: 10px;
+}
+.video-frame {
+  position: relative; aspect-ratio: 16 / 9; width: 100%;
+  border-radius: var(--radius-lg); overflow: hidden;
+  display: grid; place-items: center;
+  background:
+    radial-gradient(120% 100% at 50% 0%, rgba(129, 74, 200, 0.35) 0%, rgba(13, 13, 13, 0) 60%),
+    linear-gradient(140deg, #16121f 0%, #0b0b10 100%);
+  border: 1px solid rgba(223, 122, 254, 0.18);
+}
+.video-play {
+  width: 84px; height: 84px; border-radius: 50%;
+  display: grid; place-items: center; cursor: pointer;
+  color: #fff; border: 1px solid rgba(255, 255, 255, 0.35);
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  box-shadow: 0 14px 34px rgba(129, 74, 200, 0.45);
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+.video-play:hover { transform: scale(1.06); box-shadow: 0 18px 40px rgba(129, 74, 200, 0.6); }
+.video-play .icon { margin-left: 4px; }
+.video-caption {
+  position: absolute; bottom: 14px; left: 16px;
+  font-size: var(--font-size-xs); color: var(--text-muted); font-weight: 600;
+}
+.video-duration {
+  position: absolute; bottom: 12px; right: 14px;
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 4px 9px; border-radius: 999px;
+  background: rgba(0, 0, 0, 0.6); color: var(--text-secondary);
+  font-size: var(--font-size-xs); font-weight: 700;
+}
+
+/* ---------- key takeaways ---------- */
+.takeaways {
+  background: var(--dark-surface); border: 1px solid var(--dark-border);
+  border-left: 3px solid var(--success);
+  border-radius: var(--radius-lg); padding: var(--space-lg) var(--space-xl);
+}
+.takeaways h2 {
+  display: flex; align-items: center; gap: 8px;
+  font-size: var(--font-size-base); margin-bottom: var(--space-md);
+}
+.takeaways h2 .icon { color: var(--success); }
+.takeaways ul { list-style: none; display: grid; gap: 10px; }
+.takeaways li {
+  display: flex; gap: 10px; align-items: flex-start;
+  color: var(--text-secondary); font-size: var(--font-size-sm); line-height: 1.55;
+}
+.takeaways li .icon { color: var(--success); flex-shrink: 0; margin-top: 3px; }
+
+/* ---------- optional "read the concept" disclosure ---------- */
+.concept-more {
+  background: var(--dark-surface); border: 1px solid var(--dark-border);
+  border-radius: var(--radius-lg); padding: var(--space-md) var(--space-lg);
+}
+.concept-more > summary {
+  cursor: pointer; font-weight: 700; color: var(--text-primary);
+  list-style: none; display: flex; align-items: center; gap: 8px;
+}
+.concept-more > summary::before { content: '▸'; color: var(--secondary-color); transition: transform .2s; }
+.concept-more[open] > summary::before { transform: rotate(90deg); }
+.concept-more .lesson-body { padding-top: var(--space-md); }
+
+/* ---------- bottom actions (CTA sits bottom-right) ---------- */
+.step-actions {
+  display: flex; justify-content: flex-end; align-items: center; gap: var(--space-md);
+  padding-top: var(--space-lg); border-top: 1px solid var(--dark-border);
+  flex-wrap: wrap;
+}
+.step-actions .btn-ghost { margin-right: auto; }
+
+/* ================= Page B: Practice view — full-height split-screen IDE =================
+   DataCamp-style: the runner owns the whole viewport, the page never scrolls,
+   and only the left rail does. Height is driven by --header-height, which is
+   set to the focus bar's real height by the .is-ide rules below. */
+
+:root { --header-height: 57px; --ide-rail: 32%; }
+
+/* The IDE owns the viewport, so anything that would otherwise hang off the
+   bottom of the page (the toast host) is pinned instead of adding height. */
+body.lesson-focus.is-ide { height: 100vh; overflow: hidden; }
+body.lesson-focus.is-ide .toast-host {
+  position: fixed; bottom: 16px; right: 16px;
+  max-height: 40vh; overflow: hidden; pointer-events: none;
+}
+body.lesson-focus.is-ide .focus-shell { height: 100vh; display: flex; flex-direction: column; }
+body.lesson-focus.is-ide .focus-bar {
+  flex: 0 0 auto;
+  height: var(--header-height);
+  padding-top: 0; padding-bottom: 0;
+}
+body.lesson-focus.is-ide .focus-main {
+  flex: 1 1 auto; min-height: 0;
+  height: calc(100vh - var(--header-height));
+  max-width: none; margin: 0; padding: 0;
+  overflow: hidden;
+}
+/* .step-view is a flex column, so the split has to grow into the leftover
+   space explicitly — `height: 100%` alone resolves against the content box
+   and leaves the footer short of the bottom edge. Padding is reset here
+   because the reading/quiz views rely on the shared .focus-main padding,
+   and the IDE must consume the full box. */
+body.lesson-focus.is-ide .step-view { height: 100%; gap: 0; padding: 0; }
+body.lesson-focus.is-ide .step-view > .practice-ide { flex: 1 1 auto; min-height: 0; }
+
+/* the bar's own back control, mirroring .focus-exit */
+.focus-back {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 8px 14px; border-radius: 999px;
+  border: 1px solid var(--dark-border); background: var(--dark-surface-2);
+  color: var(--text-secondary); font-size: var(--font-size-sm); font-weight: 600;
+  text-decoration: none; white-space: nowrap;
+  transition: border-color .2s ease, color .2s ease;
+}
+.focus-back:hover { border-color: var(--primary-color); color: var(--text-primary); }
+.focus-back .icon { transform: scaleX(-1); }
+
+/* ---------- the 32 / 68 split ----------
+   `minmax(0, …)` on both tracks is what stops a tall rail from stretching
+   the grid row past the viewport (and bringing the page scrollbar back). */
+.practice-ide {
+  display: grid;
+  grid-template-columns: minmax(0, var(--ide-rail)) minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+  height: 100%; min-height: 0;
+}
+
+/* ---------- LEFT RAIL ----------
+   Sizing rule: the content should fill the column rather than float in it.
+   Type is set for comfortable reading and the checklist rows are padded to
+   a real minimum height, so 4-6 items plus the build list come close to the
+   available height on a laptop and leave only a little breathing room.
+   `overflow: hidden` on the rail guarantees the page cannot scroll; the
+   checklist itself is the only part allowed to, and only on short viewports
+   or the 6-item lessons. */
+.practice-rail {
+  min-width: 0; min-height: 0;
+  display: flex; flex-direction: column; gap: 18px;
+  overflow: hidden;
+  padding: 18px 20px 14px;
+  background: var(--dark-surface);
+  border-right: 1px solid var(--dark-border);
+}
+
+.practice-brief { flex: 0 0 auto; display: flex; flex-direction: column; gap: 8px; }
+.practice-title {
+  font-size: 1.18rem; line-height: 1.25; margin: 0; letter-spacing: -0.015em;
+  color: var(--text-primary);
+}
+.practice-objective {
+  margin: 0; color: var(--text-secondary);
+  font-size: 0.84rem; line-height: 1.55;
+}
+
+.practice-block { display: flex; flex-direction: column; gap: 10px; min-height: 0; }
+.practice-block-title {
+  display: flex; align-items: center; gap: 8px; flex-shrink: 0;
+  font-size: 0.7rem; font-weight: 800; margin: 0;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--text-muted);
+}
+.practice-block-title .icon { color: var(--secondary-color); width: 15px; height: 15px; }
+.practice-req-block .practice-block-title .icon { color: var(--success); }
+.practice-build-sub {
+  margin-left: auto; color: var(--text-muted); font-weight: 700;
+  letter-spacing: 0.04em; text-transform: none;
+}
+
+/* The checklist is the flexible block: it takes all the leftover height and
+   its rows share it evenly, so there is never a hole under the last item. The
+   build list above keeps its natural height. On a short viewport (or the
+   6-item lessons) the checklist scrolls instead of overflowing the rail. */
+.practice-rail-body {
+  flex: 1 1 auto; min-height: 0;
+  display: flex; flex-direction: column; gap: 18px;
+}
+/* The build list takes its natural height, grows into the leftover space, and
+   may shrink if the checklist needs the room — so a short build list fills
+   the column instead of leaving a hole, and a long one never pushes the
+   requirement checklist (the gate) out of view. */
+.practice-build {
+  flex: 1 1 auto; min-height: 0; max-height: 55%;
+  overflow-y: auto; overscroll-behavior: contain;
+  display: flex; flex-direction: column; justify-content: center; gap: 10px;
+}
+.practice-build::-webkit-scrollbar { width: 6px; }
+.practice-build::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 999px; }
+.practice-req-block {
+  flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain;
+}
+.practice-req-block::-webkit-scrollbar { width: 6px; }
+.practice-req-block::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.14); border-radius: 999px; }
+/* 1fr rows divide the block's height evenly, so the list always reaches the
+   bottom of its block. The min is a tap-target floor, not a text floor: a row
+   with two lines of text is taller than this anyway, which is why the 5- and
+   6-item lessons still fit without a scrollbar. */
+.practice-req-block .self-check {
+  flex: 1 1 auto; min-height: 0;
+  grid-auto-rows: minmax(30px, 1fr);
+  gap: 8px;
+}
+
+/* the derived build list: what to place, then what to connect */
+.build-nodes, .build-links { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.build-nodes li {
+  padding: 5px 11px; border-radius: 999px;
+  background: var(--dark-surface-2); border: 1px solid var(--dark-border-soft);
+  color: var(--text-secondary); font-size: 0.78rem; font-weight: 600; white-space: nowrap;
+}
+.build-links { flex-direction: column; gap: 6px; }
+.build-links li {
+  display: flex; align-items: center; gap: 7px;
+  color: var(--text-muted); font-size: 0.78rem; line-height: 1.4;
+}
+.build-links .icon { flex-shrink: 0; color: var(--secondary-color); opacity: .7; }
+.practice-build-note { margin: 0; color: var(--text-muted); font-size: 0.78rem; line-height: 1.5; }
+
+/* ---------- unified checklist ---------- */
+.self-check { list-style: none; display: grid; gap: 8px; margin: 0; padding: 0; }
+.self-check-item {
+  position: relative;
+  min-height: 42px;
+  display: flex; flex-direction: column; justify-content: center;
+  padding: 7px 10px;
+  background: var(--dark-surface-2);
+  border: 1px solid var(--dark-border-soft);
+  border-radius: var(--radius-md);
+  transition: border-color .15s ease, background .15s ease;
+}
+.self-check-item:hover { border-color: var(--dark-border); }
+.self-check-item.is-auto { border-color: rgba(47, 191, 113, 0.35); background: rgba(47, 191, 113, 0.06); }
+.self-check label {
+  display: flex; gap: 10px; align-items: flex-start; cursor: pointer;
+  font-size: 0.84rem; color: var(--text-secondary); line-height: 1.45;
+}
+.self-check-item.is-auto label { cursor: default; }
+.self-check input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.check-box {
+  flex-shrink: 0; width: 18px; height: 18px; border-radius: 5px; margin-top: 1px;
+  display: grid; place-items: center;
+  border: 1.5px solid var(--dark-border); background: rgba(0, 0, 0, 0.35);
+  color: transparent;
+  transition: background .15s ease, border-color .15s ease, color .15s ease;
+}
+.self-check label:hover .check-box { border-color: var(--primary-color); }
+.self-check input:checked + .check-box {
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  border-color: transparent; color: #fff;
+}
+.self-check input:checked ~ .check-text { color: var(--text-primary); }
+.self-check input:focus-visible + .check-box { outline: 2px solid var(--secondary-color); outline-offset: 2px; }
+.self-check-item.is-auto .check-box {
+  background: rgba(47, 191, 113, 0.22); border-color: rgba(47, 191, 113, 0.7); color: #d7ffe7;
+}
+.self-check-item.is-auto .check-text { color: var(--text-primary); }
+.check-auto {
+  display: inline-flex; align-items: center; gap: 3px; margin: 5px 0 0 28px;
+  padding: 1px 6px; border-radius: 999px; align-self: flex-start;
+  background: rgba(47, 191, 113, 0.12); border: 1px solid rgba(47, 191, 113, 0.45);
+  color: #7ff0b5;
+  font-size: 9px; font-weight: 800; letter-spacing: 0.07em; text-transform: uppercase;
+}
+
+.check-meter {
+  margin-left: auto; color: var(--text-muted); font-weight: 800; letter-spacing: 0.04em;
+  font-size: 0.74rem;
+}
+.check-meter span { color: var(--secondary-color); }
+
+/* ---------- rail footer ---------- */
+.practice-rail-foot {
+  flex: 0 0 auto; padding-top: 12px;
+  border-top: 1px solid var(--dark-border-soft);
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+}
+.practice-rail-foot .btn-sm { padding: 6px 12px; font-size: 0.76rem; }
+.practice-xp {
+  display: inline-flex; align-items: center; gap: 4px;
+  color: var(--secondary-color); font-size: 0.72rem; font-weight: 800; white-space: nowrap;
+}
+
+/* ---------- RIGHT: the canvas IDE column ---------- */
+.practice-ide-main {
+  min-width: 0; min-height: 0;
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
+/* the mount point itself must stretch, otherwise .sim-ide's height:100%
+   resolves against an auto-height parent and the stage collapses to zero.
+   .sim-root IS #canvas-mount (the backend adds the class to it) and .sim-ide
+   is its child, so both links in the chain have to grow or the action bar
+   floats mid-column with the drawer underneath it. */
+#canvas-mount {
+  flex: 1 1 auto; min-height: 0; min-width: 0;
+  display: flex; flex-direction: column;
+}
+#canvas-mount > .sim-ide { flex: 1 1 auto; min-height: 0; }
+
+/* the optional second exercise: collapsed by default so it never competes
+   with the canvas for height (and scrolls internally when opened) */
+.practice-drawer {
+  flex: 0 0 auto;
+  border-top: 1px solid var(--dark-border);
+  background: rgba(0, 0, 0, 0.35);
+  max-height: 45%;
+  display: flex; flex-direction: column; min-height: 0;
+}
+.practice-drawer > summary {
+  flex: 0 0 auto;
+  display: flex; align-items: center; gap: 8px;
+  padding: 9px 14px; cursor: pointer; list-style: none;
+  color: var(--text-muted); font-size: var(--font-size-xs); font-weight: 700;
+}
+.practice-drawer > summary::-webkit-details-marker { display: none; }
+.practice-drawer > summary .icon { transition: transform .2s ease; }
+.practice-drawer[open] > summary .icon { transform: rotate(180deg); }
+.practice-drawer > summary:hover { color: var(--text-primary); }
+.practice-drawer-body { flex: 1 1 auto; min-height: 0; overflow: auto; }
+.practice-drawer .ex-block { margin: 0 var(--space-lg) var(--space-md); }
+.practice-drawer summary em {
+  font-style: normal; color: var(--secondary-color);
+  font-size: 10px; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase;
+}
+.practice-ide-main .ex-block { margin: var(--space-md) var(--space-lg); }
+
+/* the authored step-by-step list, now living in the drawer */
+.task-steps { list-style: none; counter-reset: task; display: grid; gap: var(--space-md); margin: 0; padding: 0; }
+.task-steps li {
+  counter-increment: task; position: relative;
+  padding: var(--space-md) var(--space-lg) var(--space-md) 54px;
+  background: var(--dark-surface); border: 1px solid var(--dark-border);
+  border-radius: var(--radius-lg);
+}
+.task-steps li::before {
+  content: counter(task);
+  position: absolute; left: 16px; top: var(--space-md);
+  width: 26px; height: 26px; border-radius: 50%;
+  display: grid; place-items: center;
+  background: rgba(129, 74, 200, 0.22); color: var(--secondary-color);
+  font-size: var(--font-size-xs); font-weight: 700;
+}
+.task-steps strong { display: block; color: var(--text-primary); font-size: var(--font-size-sm); }
+.task-steps span { display: block; color: var(--text-secondary); font-size: var(--font-size-sm); line-height: 1.55; margin-top: 3px; }
+.task-code {
+  display: inline-block; margin-top: 8px;
+  background: rgba(0, 0, 0, 0.55); border: 1px solid var(--dark-border);
+  border-radius: var(--radius-sm); padding: 3px 9px;
+  font-family: var(--font-mono, monospace); font-size: var(--font-size-xs);
+  color: var(--secondary-color); white-space: pre-wrap; word-break: break-all;
+}
+.task-steps-tight { gap: 8px; }
+.task-steps-tight li { padding: 10px 12px 10px 44px; }
+.task-steps-tight li::before { left: 12px; top: 10px; width: 22px; height: 22px; font-size: 10px; }
+.task-steps-tight strong { font-size: var(--font-size-xs); }
+.task-steps-tight span { font-size: var(--font-size-xs); }
+.practice-no-canvas {
+  flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: var(--space-lg); padding: var(--space-2xl); text-align: center;
+}
+.practice-no-canvas p { max-width: 42ch; color: var(--text-secondary); font-size: var(--font-size-sm); }
+
+/* the gated button once it lands in the canvas action bar */
+.sim-gate { white-space: nowrap; }
+
+/* ================= Page C: Quiz & verification gate ================= */
+.quiz-list { display: flex; flex-direction: column; gap: var(--space-lg); }
+.quiz-item {
+  background: var(--dark-surface); border: 1px solid var(--dark-border);
+  border-radius: var(--radius-lg); padding: var(--space-lg) var(--space-xl);
+  transition: border-color .2s ease;
+}
+.quiz-item.is-fail { border-color: rgba(229, 72, 77, 0.55); }
+.quiz-item.is-pass { border-color: rgba(47, 191, 113, 0.45); }
+.quiz-item-head { display: flex; align-items: center; gap: 10px; margin-bottom: var(--space-sm); }
+.quiz-num {
+  display: inline-grid; place-items: center; min-width: 30px; height: 24px; padding: 0 8px;
+  border-radius: 999px; background: rgba(129, 74, 200, 0.2); color: var(--secondary-color);
+  font-size: var(--font-size-xs); font-weight: 800;
+}
+.quiz-kind {
+  font-size: var(--font-size-xs); color: var(--text-muted);
+  font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;
+}
+.quiz-q { margin: 0 0 var(--space-md); font-weight: 600; line-height: 1.55; }
+
+.quiz-opts { display: flex; flex-direction: column; gap: 9px; }
+.quiz-opt {
+  display: flex; align-items: center; gap: 11px; width: 100%; text-align: left;
+  padding: 12px 14px; cursor: pointer; font: inherit; font-size: var(--font-size-sm);
+  color: var(--text-secondary); background: var(--dark-surface-2);
+  border: 1px solid var(--dark-border); border-radius: var(--radius-md);
+  transition: border-color .15s ease, background .15s ease, color .15s ease;
+}
+.quiz-opt:hover:not(:disabled) { border-color: var(--primary-color); color: var(--text-primary); }
+.quiz-letter {
+  flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%;
+  display: grid; place-items: center;
+  background: rgba(255, 255, 255, 0.07); font-size: var(--font-size-xs); font-weight: 800;
+}
+.quiz-opt.is-selected {
+  border-color: var(--secondary-color);
+  background: rgba(129, 74, 200, 0.16); color: var(--text-primary);
+}
+.quiz-opt.is-selected .quiz-letter { background: var(--primary-color); color: #fff; }
+.quiz-opt.is-right { border-color: rgba(47, 191, 113, 0.7); background: rgba(47, 191, 113, 0.12); color: #d7ffe7; }
+.quiz-opt.is-right .quiz-letter { background: var(--success); color: #062615; }
+.quiz-opt.is-wrong { border-color: rgba(229, 72, 77, 0.75); background: rgba(229, 72, 77, 0.12); color: #ffd5d6; }
+.quiz-opt.is-wrong .quiz-letter { background: var(--danger); color: #fff; }
+.quiz-opt:disabled { cursor: default; opacity: 0.95; }
+
+.quiz-sample-wrap { margin-bottom: var(--space-md); }
+.quiz-sample-label {
+  display: block; font-size: var(--font-size-xs); color: var(--text-muted);
+  font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px;
+}
+.quiz-sample { margin: 0; max-height: 190px; overflow: auto; font-size: var(--font-size-xs); }
+.quiz-input {
+  width: 100%; padding: 11px 13px; resize: vertical;
+  background: rgba(0, 0, 0, 0.5); border: 1px solid var(--dark-border);
+  border-radius: var(--radius-md); color: var(--text-primary);
+  font-family: var(--font-mono, monospace); font-size: var(--font-size-sm);
+}
+.quiz-input:focus { outline: none; border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(129, 74, 200, 0.18); }
+.quiz-input.is-right { border-color: rgba(47, 191, 113, 0.7); }
+.quiz-input.is-wrong { border-color: rgba(229, 72, 77, 0.75); }
+
+.quiz-feedback {
+  display: flex; gap: 9px; align-items: flex-start; margin: var(--space-md) 0 0;
+  padding: 10px 13px; border-radius: var(--radius-md);
+  font-size: var(--font-size-sm); line-height: 1.55;
+}
+.quiz-feedback.is-ok { background: rgba(47, 191, 113, 0.1); border: 1px solid rgba(47, 191, 113, 0.35); color: #d7ffe7; }
+.quiz-feedback.is-err { background: rgba(229, 72, 77, 0.09); border: 1px solid rgba(229, 72, 77, 0.35); color: #ffd5d6; }
+.fb-why { display: block; margin-top: 5px; color: var(--text-muted); font-size: var(--font-size-xs); }
+
+.quiz-actions { display: flex; justify-content: flex-end; }
+
+/* ---------- pass / fail gate ---------- */
+.gate-pass, .gate-fail {
+  display: flex; align-items: center; gap: var(--space-lg); flex-wrap: wrap;
+  padding: var(--space-xl); border-radius: var(--radius-xl);
+  border: 1px solid transparent;
+}
+.gate-pass {
+  background: linear-gradient(135deg, rgba(47, 191, 113, 0.14), rgba(129, 74, 200, 0.1));
+  border-color: rgba(47, 191, 113, 0.5);
+  animation: gate-in .55s cubic-bezier(0.2, 0.9, 0.3, 1.25) both;
+}
+.gate-fail {
+  background: rgba(229, 72, 77, 0.08); border-color: rgba(229, 72, 77, 0.5);
+  animation: gate-in .4s ease both;
+}
+.gate-icon {
+  flex-shrink: 0; width: 56px; height: 56px; border-radius: 50%;
+  display: grid; place-items: center; color: #fff;
+}
+.gate-pass .gate-icon { background: var(--success); color: #05291a; animation: gate-pop .6s .15s both; }
+.gate-fail .gate-icon { background: var(--danger); }
+.gate-copy { flex: 1; min-width: 220px; }
+.gate-copy h3 { margin: 0 0 5px; font-size: var(--font-size-xl); }
+.gate-copy p { margin: 0; color: var(--text-secondary); font-size: var(--font-size-sm); line-height: 1.55; }
+.gate-actions { display: flex; gap: var(--space-md); flex-wrap: wrap; }
+
+@keyframes gate-in {
+  from { opacity: 0; transform: translateY(14px) scale(0.985); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes gate-pop {
+  0%   { transform: scale(0.2); opacity: 0; }
+  60%  { transform: scale(1.15); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .gate-pass, .gate-fail, .gate-pass .gate-icon { animation: none; }
+}
+
+/* ---------- responsive ----------
+   The IDE keeps its split down to tablet; below that the rail stacks on top
+   and the page scrolls normally again (a zero-height canvas is unusable). */
+@media (max-width: 900px) {
+  :root { --ide-rail: 38%; }
+}
+@media (max-width: 760px) {
+  body.lesson-focus.is-ide { height: auto; overflow: visible; }
+  body.lesson-focus.is-ide .focus-shell,
+  body.lesson-focus.is-ide .focus-main { height: auto; overflow: visible; }
+  .practice-ide { grid-template-columns: 1fr; height: auto; }
+  .practice-rail { border-right: 0; border-bottom: 1px solid var(--dark-border); overflow: visible; }
+  .sim-stage { min-height: 60vh; }
+}
+@media (max-width: 720px) {
+  .focus-bar { grid-template-columns: auto minmax(0, 1fr); gap: var(--space-md); row-gap: 8px; }
+  .focus-stats { grid-column: 1 / -1; justify-content: flex-end; }
+  .focus-exit span, .focus-back span { display: none; } /* icon-only on small screens */
+  .focus-exit, .focus-back { padding: 8px; }
+  .step-progress { width: min(220px, 50vw); }
+  .step-actions .btn { width: 100%; justify-content: center; }
+  .step-actions .btn-ghost { margin-right: 0; }
+  .quiz-item { padding: var(--space-lg); }
+  .gate-pass, .gate-fail { flex-direction: column; align-items: flex-start; text-align: left; }
+  .gate-actions { width: 100%; }
+  .gate-actions .btn { flex: 1; justify-content: center; }
+}

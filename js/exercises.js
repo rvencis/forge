@@ -494,6 +494,38 @@ var editor = root.querySelector('.ex-code');
     });
   }
 
+  /* Evaluate a learner answer the way n8n composes parameter values: any
+     {{ … }} segment is evaluated and concatenated with the literal text
+     around it, while a bare expression (no braces) is evaluated directly.
+     Returns { value }, { empty: true } or { error } — never throws. */
+  function evaluateAnswer(raw, sample) {
+    var s = String(raw == null ? '' : raw).trim();
+    if (!s) return { empty: true };
+    var body;
+    if (s.indexOf('{{') !== -1) {
+      var parts = [], re = /\{\{([\s\S]*?)\}\}/g, last = 0, m;
+      while ((m = re.exec(s)) !== null) {
+        var lit = s.slice(last, m.index);
+        if (lit) parts.push(JSON.stringify(lit));
+        var inner = m[1].trim();
+        if (inner) parts.push('(' + inner + ')');
+        last = m.index + m[0].length;
+      }
+      var tail = s.slice(last);
+      if (tail) parts.push(JSON.stringify(tail));
+      body = parts.join(' + ');
+    } else {
+      body = s;
+    }
+    if (!body) return { empty: true };
+    try {
+      var fn = new Function('$json', '$now', '$today', '$vars', '$env', 'return (' + body + ');');
+      return { value: fn(sample, new Date(), new Date(), {}, {}) };
+    } catch (e) {
+      return { error: e.message };
+    }
+  }
+
   /* ================= dispatcher ================= */
   var ENGINES = {
     quiz: renderQuiz,
@@ -518,6 +550,7 @@ var editor = root.querySelector('.ex-code');
     render: render,
     TYPES: Object.keys(ENGINES),
     evaluateExpression: evaluateExpression,
+    evaluateAnswer: evaluateAnswer,
     normalizeExpr: normalizeExpr
   };
 })(window);

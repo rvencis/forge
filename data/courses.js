@@ -32,30 +32,32 @@
         'Add branching with If and Switch, loops with Loop Over Items'
       ],
       prerequisites: [],
+      /* Modules and lesson titles follow the DataCamp-style syllabus: every
+         lesson is a step machine — watch ➔ practice ➔ quiz (see js/steps.js). */
       chapters: [
-        { id: 'c1', title: 'Getting started', lessons: [
-          { slug: 'what-is-n8n', title: 'What is n8n?', type: 'reading', minutes: 6 },
-          { slug: 'editor-tour', title: 'The editor, canvas and executions', type: 'reading', minutes: 8 },
-          { slug: 'first-workflow', title: 'Build your first workflow', type: 'workflow', minutes: 12 },
-          { slug: 'checkpoint-triggers', title: 'Checkpoint: triggers & nodes', type: 'quiz', minutes: 5 }
+        { id: 'c1', title: 'Getting Started', lessons: [
+          { slug: 'what-is-n8n', title: 'What is n8n? (Self-Hosted vs Cloud)', type: 'reading', minutes: 6 },
+          { slug: 'editor-tour', title: 'The Editor, Canvas, and Executions', type: 'reading', minutes: 8 },
+          { slug: 'first-workflow', title: 'Build Your First 3-Node Workflow', type: 'workflow', minutes: 12 },
+          { slug: 'checkpoint-triggers', title: 'Checkpoint: Triggers & Nodes', type: 'quiz', minutes: 5 }
         ]},
         { id: 'c2', title: 'Data in n8n', lessons: [
-          { slug: 'items-and-json', title: 'Items: the data between nodes', type: 'reading', minutes: 8 },
-          { slug: 'first-expression', title: 'Your first expression', type: 'expression', minutes: 10 },
-          { slug: 'edit-fields-set', title: 'Edit Fields (Set) node deep dive', type: 'nodeconfig', minutes: 12 },
-          { slug: 'mapping-fields', title: 'Mapping fields between nodes', type: 'expression', minutes: 10 }
+          { slug: 'items-and-json', title: 'Items: Data Between Nodes', type: 'reading', minutes: 8 },
+          { slug: 'first-expression', title: 'Your First Expression ($json)', type: 'expression', minutes: 10 },
+          { slug: 'edit-fields-set', title: 'Edit Fields / Set Node Deep Dive', type: 'nodeconfig', minutes: 12 },
+          { slug: 'mapping-fields', title: 'Mapping Fields Between Nodes', type: 'expression', minutes: 10 }
         ]},
-        { id: 'c3', title: 'Flow logic', lessons: [
-          { slug: 'if-switch', title: 'Branching with If and Switch', type: 'nodeconfig', minutes: 12 },
+        { id: 'c3', title: 'Flow Logic', lessons: [
+          { slug: 'if-switch', title: 'Branching with IF and Switch Nodes', type: 'nodeconfig', minutes: 12 },
           { slug: 'loop-over-items', title: 'Loops with Loop Over Items', type: 'workflow', minutes: 14 },
-          { slug: 'merging-branches', title: 'Merging branches back together', type: 'reading', minutes: 9 },
-          { slug: 'code-node-intro', title: 'When to reach for the Code node', type: 'code', minutes: 15 }
+          { slug: 'merging-branches', title: 'Merging Branches', type: 'reading', minutes: 9 },
+          { slug: 'code-node-intro', title: 'When to Reach for Code Nodes', type: 'code', minutes: 15 }
         ]},
-        { id: 'c4', title: 'Ship it', lessons: [
-          { slug: 'schedule-trigger', title: 'Run workflows on a schedule', type: 'nodeconfig', minutes: 8 },
-          { slug: 'webhooks', title: 'Start workflows with webhooks', type: 'workflow', minutes: 12 },
-          { slug: 'activation-executions', title: 'Activation, executions and history', type: 'reading', minutes: 7 },
-          { slug: 'final-project', title: 'Final project: daily digest workflow', type: 'workflow', minutes: 18 }
+        { id: 'c4', title: 'Ship It', lessons: [
+          { slug: 'schedule-trigger', title: 'Run Workflows on a Schedule', type: 'nodeconfig', minutes: 8 },
+          { slug: 'webhooks', title: 'Start Workflows with Webhooks', type: 'workflow', minutes: 12 },
+          { slug: 'activation-executions', title: 'Activation, Executions, and History', type: 'reading', minutes: 7 },
+          { slug: 'final-project', title: 'Final Capstone Project: Order Anomaly Engine', type: 'workflow', minutes: 18 }
         ]}
       ]
     },

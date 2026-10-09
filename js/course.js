@@ -70,20 +70,30 @@
           }).join(', ') + '</p>'
         : '<p class="prereq"><strong>Prerequisites:</strong> none — start here.</p>');
 
-    /* --- syllabus accordion --- */
+    /* --- syllabus accordion (module numbering + lesson locks) --- */
     var items = course.chapters.map(function (chapter, ci) {
-      var rows = chapter.lessons.map(function (l) {
+      var rows = chapter.lessons.map(function (l, li) {
         var done = Store.isComplete(course.slug, l.slug);
+        var unlocked = Store.isUnlocked(course.slug, l.slug);
         var meta = Data.TYPE_META[l.type] || {};
+        var num = (ci + 1) + '.' + (li + 1);
+        if (!unlocked) {
+          /* locked lesson: renders as text with a lock, never navigates */
+          return '<span class="syllabus-lesson is-locked" title="Finish the previous lesson to unlock">' +
+            '<span class="tick">' + UI.icon('lock', 13) + '</span>' +
+            '<span class="s-title"><b class="s-num">' + num + '</b>' + UI.esc(l.title) + '</span>' +
+            '<span class="type-chip muted-chip">' + UI.icon(meta.icon || 'book', 13) + (meta.label || l.type) + '</span>' +
+            '<span class="s-min">locked</span></span>';
+        }
         return '<a class="syllabus-lesson' + (done ? ' done' : '') + '" href="' + UI.lessonHref(course.slug, l.slug) + '">' +
           '<span class="tick">' + (done ? UI.icon('check', 14) : '') + '</span>' +
-          '<span class="s-title">' + UI.esc(l.title) + '</span>' +
+          '<span class="s-title"><b class="s-num">' + num + '</b>' + UI.esc(l.title) + '</span>' +
           '<span class="type-chip" style="color:' + (meta.color || '#814ac8') + '">' + UI.icon(meta.icon || 'book', 13) + (meta.label || l.type) + '</span>' +
           '<span class="s-min">' + l.minutes + ' min</span></a>';
       }).join('');
       var chapterDone = chapter.lessons.filter(function (l) { return Store.isComplete(course.slug, l.slug); }).length;
       return {
-        title: 'Ch ' + (ci + 1) + ' · ' + UI.esc(chapter.title),
+        title: 'Module ' + (ci + 1) + ' · ' + UI.esc(chapter.title),
         meta: chapterDone + '/' + chapter.lessons.length,
         html: '<div class="syllabus-list">' + rows + '</div>',
         open: ci === 0

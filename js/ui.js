@@ -70,6 +70,22 @@
     return 'lesson.html?course=' + encodeURIComponent(courseSlug) + '&lesson=' + encodeURIComponent(lessonSlug);
   }
 
+  /* Deep link to one of a lesson's three views: watch | practice | quiz. */
+  function lessonStepHref(courseSlug, lessonSlug, step) {
+    return lessonHref(courseSlug, lessonSlug) + '&step=' + encodeURIComponent(step || 'watch');
+  }
+
+  /* Segmented step bar: three segments, filled up to `active` (0-based),
+     dimmed-but-tickable for steps already finished. */
+  function stepProgress(active, done) {
+    var html = '<div class="step-progress" role="progressbar" aria-valuemin="1" aria-valuemax="3" aria-valuenow="' + (active + 1) + '">';
+    for (var i = 0; i < 3; i++) {
+      html += '<span class="step-dot' + (i < active ? ' is-done' : (i === active ? ' is-active' : '')) +
+        (done && done[i] ? ' is-finished' : '') + '"></span>';
+    }
+    return html + '</div>';
+  }
+
   function progressBar(pct, cls) {
     return '<div class="progress ' + (cls || '') + '" role="progressbar" aria-valuenow="' + pct + '" aria-valuemin="0" aria-valuemax="100">' +
              '<div class="progress-fill" style="width:' + Math.max(0, Math.min(100, pct)) + '%"></div>' +
@@ -215,6 +231,7 @@
   global.UI = {
     esc: esc, el: el, qs: qs, qsa: qsa, icon: icon,
     fmtMinutes: fmtMinutes, lessonHref: lessonHref,
+    lessonStepHref: lessonStepHref, stepProgress: stepProgress,
     progressBar: progressBar, ring: ring, typeChip: typeChip, levelPill: levelPill,
     trackIcon: trackIcon, TRACK_GRADIENTS: TRACK_GRADIENTS,
     courseCard: courseCard, courseGrid: courseGrid,

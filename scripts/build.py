@@ -476,9 +476,11 @@ PAGES["course.html"] = dict(
 )
 
 # ---- lesson.html (runner, client-side) ----
-LESSON_BODY = """    <div class="lesson-shell container">
-      <aside class="lesson-sidebar" id="lesson-sidebar" aria-label="Course lessons"></aside>
-      <article class="lesson-main" id="lesson-main">
+# DataCamp-style focus shell: no site nav/footer chrome (body.lesson-focus
+# hides it in css/steps.css) — just the minimal top bar and the step views.
+LESSON_BODY = """    <div class="focus-shell">
+      <header class="focus-bar" id="focus-bar" aria-label="Lesson progress"></header>
+      <article class="focus-main" id="step-main">
         <noscript><p class="empty">This course requires JavaScript.</p></noscript>
       </article>
     </div>"""
@@ -486,13 +488,19 @@ LESSON_BODY = """    <div class="lesson-shell container">
 LESSON_JS = """    <script src="data/courses.js"></script>
     <script src="data/paths.js"></script>
     <script src="data/lessons/n8n-fundamentals.js"></script>
+    <script src="data/lessons/n8n-fundamentals-steps.js"></script>
     <script src="js/exercises.js"></script>
-    <script src="js/lesson.js"></script>"""
+    <script src="js/simulator.js"></script>
+    <script src="js/lesson.js"></script>
+    <script src="js/steps.js"></script>"""
 
 PAGES["lesson.html"] = dict(
     title="Lesson — " + BASE,
-    desc="Interactive lesson runner with exercises: quiz, expression, node-config, workflow builder and code.",
-    body=LESSON_BODY, extra_js=LESSON_JS
+    desc="Distraction-free lesson runner: video, practice and quiz steps with a pass/fail gate that unlocks the next lesson.",
+    body=LESSON_BODY, extra_js=LESSON_JS,
+    body_class="lesson-focus",
+    head_extra='  <link rel="stylesheet" href="css/steps.css">\n'
+               '  <link rel="stylesheet" href="css/simulator.css">'
 )
 
 # ---- dashboard.html ----

@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Smoke — steps</title>
+  <link rel="stylesheet" href="../css/styles.css">
+  <link rel="stylesheet" href="../css/lms.css">
+  <link rel="stylesheet" href="../css/mobile.css">
+  <link rel="stylesheet" href="../css/steps.css">
+  <link rel="stylesheet" href="../css/simulator.css">
+</head>
+<body class="lesson-focus">
+  <main id="main">
+    <div class="focus-shell">
+      <header class="focus-bar" id="focus-bar"></header>
+      <article class="focus-main" id="step-main"></article>
+    </div>
+  </main>
+  <script src="../js/data.js"></script>
+  <script src="../js/ui.js"></script>
+  <script src="../js/supabase.js"></script>
+  <script src="../js/store.js"></script>
+  <script src="../js/main.js"></script>
+  <script src="../data/courses.js"></script>
+  <script src="../data/paths.js"></script>
+  <script src="../data/lessons/n8n-fundamentals.js"></script>
+  <script src="../data/lessons/n8n-fundamentals-steps.js"></script>
+  <script src="../js/exercises.js"></script>
+  <script src="../js/simulator.js"></script>
+  <script src="../js/lesson.js"></script>
+  <script src="../js/steps.js"></script>
+  <script>
+    /* The runner rewrites ?step= on boot, so remember what the URL asked
+       for before it boots — the driver branches on the *requested* step. */
+    window.__asked = location.search;
+
+    /* dev-only seed: ?seed=two marks lessons 1.1 + 1.2 complete so that
+       lesson 1.3 unlocks — exercises the unlock path headlessly. */
+    if (location.search.indexOf('seed=two') !== -1) {
+      var t = Date.now();
+      localStorage.setItem('n8nacademy.v1', JSON.stringify({
+        user: null, xp: 20,
+        completed: {
+          'n8n-fundamentals/what-is-n8n': t,
+          'n8n-fundamentals/editor-tour': t
+        },
+        scores: {}, attempts: {}, badges: [], days: {},
+        streak: { count: 0, best: 0, lastDay: null }, lastLesson: null,
+        steps: {
+          'n8n-fundamentals/what-is-n8n':   { watch: t, practice: t, quiz: t },
+          'n8n-fundamentals/editor-tour': { watch: t, practice: t, quiz: t }
+        }
+      }));
+    }
+  </script>
+  <script>
+    /* Headless driver: walks watch -> practice -> fail -> retry -> pass exactly
+       as a learner would, writing PASS/FAIL lines to #smoke-report (read via
+       chromium --dump-dom). Dev-time only — delete with this file. */
+    (function () {
+      var log = [];
+      function check(name, cond, extra) {
+        log.push((cond ? 'PASS' : 'FAIL') + ' — ' + name + (cond ? '' : ' :: ' + (extra || '')));
+      }
+      function report() {
+        document.getElementById('smoke-report').textContent = log.join('\n') + '\nTOTAL: ' + log.length;
+        document.title = log.some(function (l) { return l.indexOf('FAIL') === 0; }) ? 'SMOKE FAILED' : 'SMOKE OK';
+      }
+      document.addEventListener('DOMContentLoaded', function () {
+        try {
+          var $ = function (s) { return document.querySelector(s); };
+          var bar = $('#focus-bar').textContent;
+          log.push('INFO — asked: ' + window.__asked);
+          log.push('INFO — after boot: ' + location.search);
+
+          /* unlock + practice-canvas scenario: lessons 1.1 + 1.2 seeded complete,
+             open 1.3, then drive the canvas programmatically — a wrong graph
+             must keep the quiz gate shut, a right one must open it. */
+          if (window.__asked.indexOf('lesson=first-workflow') !== -1) {
+            check('unlocked lesson renders Lesson 1.3', /Lesson 1\.3/.test(bar), bar);
+            check('watch view rendered', !!$('.step-watch'));
+            $('#cta-practice').click();
+            check('practice view rendered', !!$('.step-practice'));
+            check('practice canvas mounted', !!$('.sim-stage') && !!$('#canvas-mount .sim-ide'));
+
+            /* palette is rendered from the authored spec, decoys included */
+            var chips = document.querySelectorAll('#canvas-mount .sim-chip');
+            check('palette rendered from spec', chips.length === 5, 'n=' + chips.length);
+            check('requirements counter in the toolbar', !!$('.sim-pill') && /met$/.test($('.sim-pill').textContent));
+            check('requirements list in the console drawer', document.querySelectorAll('.sim-console-reqs .sim-req').length >= 3);
+            check('no nodes placed yet', document.querySelectorAll('.sim-node').length === 0);
+            check('quiz CTA disabled on an empty canvas', $('#cta-quiz').disabled);
+
+            var boxes = document.querySelectorAll('.self-check input');
+            boxes.forEach(function (b) { b.checked = true; b.dispatchEvent(new Event('change', { bubbles: true })); });
+            check('all ticked but graph wrong -> CTA still disabled', $('#cta-quiz').disabled);
+
+            /* WRONG graph: right nodes, edges backwards (allowExtras:false) */
+            var sim = window.Simulator.active;
+            check('Simulator exposes the mounted backend', !!sim);
+            var a = sim.addNode('manualTrigger', [40, 40]);
+            var b = sim.addNode('set', [260, 40]);
+            var c = sim.addNode('httpRequest', [480, 40]);
+            check('three nodes added via addNode', document.querySelectorAll('.sim-node').length === 3);
+            sim.connect(b.id, 0, a.id, 0);   /* set -> trigger  (wrong direction) */
+            sim.connect(c.id, 0, b.id, 0);   /* http -> set      (wrong direction) */
+            check('wrong topology keeps the CTA disabled', $('#cta-quiz').disabled);
+            check('requirements show the failures', document.querySelectorAll('.sim-console-reqs .sim-req:not(.is-ok)').length > 0);
+
+            /* RIGHT graph: clear the manual ticks first so the auto-tick below
+               is observed rather than masked by this driver's own checkboxes */
+            sim.reset();
+            boxes.forEach(function (b) { b.checked = false; b.dispatchEvent(new Event('change', { bubbles: true })); });
+            check('reset clears the canvas', document.querySelectorAll('.sim-node').length === 0);
+            check('nothing ticked -> CTA disabled', $('#cta-quiz').disabled);
+
+            var t = sim.addNode('manualTrigger', [40, 40]);
+            var s1 = sim.addNode('set', [260, 40]);
+            var h = sim.addNode('httpRequest', [480, 40]);
+            sim.connect(t.id, 0, s1.id, 0);
+            sim.connect(s1.id, 0, h.id, 0);
+            check('correct topology verifies', sim.verify().ok === true,
+              JSON.stringify(sim.verify().checks.filter(function (x) { return !x.ok; })));
+            check('all requirements ticked', document.querySelectorAll('.sim-console-reqs .sim-req:not(.is-ok)').length === 0);
+            check('counter pill turns green', $('.sim-pill').getAttribute('data-state') === 'ok');
+            check('wires rendered', document.querySelectorAll('.sim-wire').length === 2);
+            /* spec.checklist = [0, 1, 3] of a 4-item list -> the canvas ticks
+               exactly those three, leaving item 2 for the learner */
+            check('canvas auto-ticked its own checklist items',
+              document.querySelectorAll('.self-check-item.is-auto input:checked').length === 3,
+              'n=' + document.querySelectorAll('.self-check-item.is-auto input:checked').length);
+            check('non-auto item left for the learner',
+              document.querySelectorAll('.self-check-item:not(.is-auto) input:checked').length === 0);
+            check('auto-tick alone does NOT open the gate', $('#cta-quiz').disabled);
+            boxes[2].checked = true; boxes[2].dispatchEvent(new Event('change', { bubbles: true }));
+            check('last manual tick + verified topology opens the CTA', !$('#cta-quiz').disabled);
+            check('practice step recorded once verified',
+              Store.stepState('n8n-fundamentals', 'first-workflow').practice === true);
+
+            /* the export must be real n8n workflow JSON */
+            var json = sim.toJSON();
+            check('JSON export has nodes[] + connections',
+              Array.isArray(json.nodes) && json.nodes.length === 3 &&
+              !!(json.connections['Manual Trigger'] &&
+                 json.connections['Manual Trigger'].main[0][0].node === 'Edit Fields (Set)'),
+              JSON.stringify(json.connections));
+            check('JSON export carries n8n node types',
+              json.nodes[0].type === 'n8n-nodes-base.manualTrigger');
+
+            /* LAYOUT: the IDE must own the viewport with no page scroll, and
+               the rail/canvas must hold the 32/68 split. Checked before the
+               destroy/remount sequence below, which swaps the canvas out. */
+            check('body flagged as the IDE shell', document.body.classList.contains('is-ide'));
+            /* the lesson shell itself must not scroll. (This harness appends a
+               <pre> report below the shell, so measure the shell, not <body>.) */
+            var shellBox = document.querySelector('.focus-shell').getBoundingClientRect();
+            check('lesson shell fits the viewport exactly (no page scroll)',
+              Math.abs(shellBox.height - window.innerHeight) < 2,
+              'shellH=' + Math.round(shellBox.height) + ' winH=' + window.innerHeight);
+            var rail = document.querySelector('.practice-rail');
+            var ideMain = document.querySelector('.practice-ide-main');
+            var rw = rail.getBoundingClientRect().width;
+            var cw = ideMain.getBoundingClientRect().width;
+            var pct = Math.round(rw / (rw + cw) * 100);
+            check('left rail is ~32% of the split', pct >= 28 && pct <= 36, pct + '%');
+            check('canvas column takes the rest', Math.round(cw / (rw + cw) * 100) === 100 - pct);
+            var stageBox = document.querySelector('.sim-stage').getBoundingClientRect();
+            check('canvas stage has real height', stageBox.height > 200, 'h=' + Math.round(stageBox.height));
+            /* The canvas column ends on the "do it in your own n8n" drawer when
+               the lesson has steps/exercise; with no drawer the action bar is
+               the last element. Either way the column must reach the bottom. */
+            var drawer = document.querySelector('.practice-drawer');
+            var lastEl = drawer || document.querySelector('.sim-footbar');
+            check('canvas column reaches the bottom of the shell',
+              Math.abs(lastEl.getBoundingClientRect().bottom - shellBox.bottom) < 2,
+              'last=' + Math.round(lastEl.getBoundingClientRect().bottom) + ' shell=' + Math.round(shellBox.bottom));
+            check('action bar sits directly above the drawer',
+              !drawer || Math.abs(drawer.getBoundingClientRect().top -
+                document.querySelector('.sim-footbar').getBoundingClientRect().bottom) < 2);
+            check('gated button lives in the canvas action bar', !!document.querySelector('.sim-footbar #cta-quiz'));
+            check('console drawer + two tabs', !!document.querySelector('.sim-console') && document.querySelectorAll('.sim-tab').length === 2);
+            check('back-to-video control in the top bar', !!document.querySelector('.focus-back'));
+            document.querySelector('.sim-json-btn').click();
+            check('View JSON writes a real n8n export to the console',
+              /"n8n-nodes-base.manualTrigger"/.test(document.querySelector('.sim-console-body[data-pane="run"]').textContent));
+            document.querySelector('.sim-run').click();
+            check('Execute run opens the console drawer', document.querySelector('.sim-console').getAttribute('data-open') === '1');
+            /* the drawer takes height from the stage, never from the page */
+            check('opening the drawer shrinks the stage, not the shell',
+              document.querySelector('.sim-stage').getBoundingClientRect().height < stageBox.height &&
+              Math.abs(document.querySelector('.focus-shell').getBoundingClientRect().height - window.innerHeight) < 2,
+              'stageH=' + Math.round(document.querySelector('.sim-stage').getBoundingClientRect().height) + ' was=' + Math.round(stageBox.height));
+
+            /* The draft must survive a reload: destroy() flushes it, and a fresh
+               mount of the same lessonKey restores the graph. */
+            sim.destroy();
+            var draftKey = 'rvencisforge.canvas.draft.n8n-fundamentals/first-workflow';
+            var draft = JSON.parse(localStorage.getItem(draftKey) || 'null');
+            check('draft flushed on destroy', !!draft && draft.graph.nodes.length === 3);
+            var again = Simulator.mount(document.createElement('div'), {
+              spec: window.N8N_STEPS['n8n-fundamentals/first-workflow'].practice.canvas,
+              lessonKey: 'n8n-fundamentals/first-workflow'
+            });
+            check('draft restored on the next mount', again.graph.nodes.length === 3, 'n=' + again.graph.nodes.length);
+            check('restored draft still verifies', again.verify().ok === true);
+            again.destroy();
+
+            /* Real pointer interaction (not the programmatic API): click a
+               palette chip, then drag handle-to-handle with PointerEvents —
+               the same path a learner's mouse takes. */
+            var again2 = Simulator.mount($('#canvas-mount'), {
+              spec: window.N8N_STEPS['n8n-fundamentals/first-workflow'].practice.canvas,
+              lessonKey: 'n8n-fundamentals/first-workflow'
+            });
+            again2.reset();   /* start from the empty canvas again */
+            check('reset before the pointer run', document.querySelectorAll('.sim-node').length === 0);
+            /* elementFromPoint only hits what is inside the viewport, and the
+               canvas sits below the fold in a headless window. scroll-behavior
+               is smooth in this stylesheet, so scroll instantly. */
+            var stageEl = document.querySelector('.sim-stage');
+            var stageBox = stageEl.getBoundingClientRect();
+            window.scrollTo({ top: window.scrollY + stageBox.top - 120, behavior: 'instant' });
+            function centre(el) {
+              var r = el.getBoundingClientRect();
+              return { x: r.left + el.offsetWidth / 2, y: r.top + el.offsetHeight / 2 };
+            }
+            function dragHandle(from, to, pid) {
+              var a = centre(from), b = centre(to);
+              from.dispatchEvent(new PointerEvent('pointerdown',
+                { clientX: a.x, clientY: a.y, bubbles: true, pointerId: pid, button: 0, isPrimary: true }));
+              document.dispatchEvent(new PointerEvent('pointermove',
+                { clientX: (a.x + b.x) / 2, clientY: (a.y + b.y) / 2, bubbles: true, pointerId: pid }));
+              document.dispatchEvent(new PointerEvent('pointermove',
+                { clientX: b.x, clientY: b.y, bubbles: true, pointerId: pid }));
+              document.dispatchEvent(new PointerEvent('pointerup',
+                { clientX: b.x, clientY: b.y, bubbles: true, pointerId: pid }));
+            }
+            var chip = document.querySelector('#canvas-mount .sim-chip[data-key="manualTrigger"]');
+            chip.click();
+            check('palette click drops a node card', document.querySelectorAll('.sim-node').length === 1);
+            document.querySelector('#canvas-mount .sim-chip[data-key="set"]').click();
+            var cards = document.querySelectorAll('.sim-node');
+            dragHandle(cards[0].querySelector('.sim-port-out'), cards[1].querySelector('.sim-port-in'), 7);
+            check('pointer drag drew a wire', document.querySelectorAll('.sim-wire').length === 1,
+              'n=' + document.querySelectorAll('.sim-wire').length);
+            document.querySelector('#canvas-mount .sim-chip[data-key="httpRequest"]').click();
+            cards = document.querySelectorAll('.sim-node');
+            dragHandle(cards[1].querySelector('.sim-port-out'), cards[2].querySelector('.sim-port-in'), 8);
+            check('second pointer drag completed the chain',
+              document.querySelectorAll('.sim-wire').length === 2, 'n=' + document.querySelectorAll('.sim-wire').length);
+            check('pointer-built graph verifies', again2.verify().ok === true,
+              JSON.stringify(again2.verify().checks.filter(function (x) { return !x.ok; }).map(function (x) { return x.label; })));
+            again2.destroy();
+
+            report();
+            return;
+          }
+
+          /* clamp: a hand-typed forward URL must fall back to the video step */
+          if (/step=(practice|quiz)/.test(window.__asked)) {
+            check('forward jump clamped to watch', !!$('.step-watch'));
+            check('URL rewritten to step=watch', location.search.indexOf('step=watch') !== -1, location.search);
+            report();
+            return;
+          }
+
+          /* Step 1 — video view */
+          check('focus bar rendered', $('#focus-bar').innerHTML.length > 0);
+          check('label = Lesson 1.1 · Step 1 of 3', /Lesson 1\.1/.test(bar) && /Step 1 of 3/.test(bar), bar);
+          check('watch view rendered', !!$('.step-watch'));
+          check('video frame + play icon', !!$('.video-frame') && !!$('.video-play'));
+          check('takeaways = 3', document.querySelectorAll('.takeaways li').length === 3);
+          check('continue CTA present', !!$('#cta-practice'));
+
+          /* Step 1 -> 2 */
+          $('#cta-practice').click();
+          check('practice view after continue', !!$('.step-practice'));
+          check('objective shown in the left rail', !!$('.practice-objective') && $('.practice-objective').textContent.length > 20);
+          var boxes = document.querySelectorAll('.self-check input');
+          check('self-check items >= 4', boxes.length >= 4, 'n=' + boxes.length);
+          check('left rail holds the build list + requirements',
+            !!$('.practice-rail .practice-build') && !!$('.practice-rail .self-check'));
+          check('local-n8n steps are in the drawer, not the rail',
+            !!$('.practice-drawer .task-steps') && !$('.practice-rail .task-steps'));
+          check('hint control present', !!$('#practice-hint'));
+          check('practice canvas mounted', !!$('.sim-stage'));
+          check('quiz CTA disabled before self-check', $('#cta-quiz').disabled);
+          boxes.forEach(function (b) { b.checked = true; b.dispatchEvent(new Event('change', { bubbles: true })); });
+          /* this lesson's canvas covers all four checklist items, so the gate is
+             shut until the topology itself is right */
+          check('ticking alone does not open the gate', $('#cta-quiz').disabled);
+          var s = window.Simulator.active;
+          var n1 = s.addNode('manualTrigger', [40, 40]);
+          var n2 = s.addNode('set', [260, 40]);
+          var n3 = s.addNode('httpRequest', [480, 40]);
+          s.connect(n1.id, 0, n2.id, 0);
+          s.connect(n2.id, 0, n3.id, 0);
+          check('verified topology opens the quiz CTA', !$('#cta-quiz').disabled);
+
+          /* Step 2 -> 3 */
+          $('#cta-quiz').click();
+          check('quiz view rendered', !!$('.step-quiz'));
+          check('3 questions', document.querySelectorAll('.quiz-item').length === 3);
+          check('label = Step 3 of 3', /Step 3 of 3/.test($('#focus-bar').textContent));
+
+          /* FAIL path — one wrong answer must not complete the lesson */
+          $('.quiz-item[data-q="0"] .quiz-opt[data-opt="0"]').click(); /* correct is 1 */
+          $('#quiz-submit').click();
+          check('fail banner shown', !!$('.gate-fail'));
+          check('wrong question highlighted', document.querySelectorAll('.quiz-item.is-fail').length >= 1);
+          check('hint rendered on miss', !!$('.quiz-item.is-fail .quiz-feedback.is-err'));
+          check('NOT completed on fail', !Store.isComplete('n8n-fundamentals', 'what-is-n8n'));
+          check('next lesson locked on fail', !Store.isUnlocked('n8n-fundamentals', 'editor-tour'));
+          check('Try Again present', !!$('#quiz-retry'));
+          $('#quiz-retry').click();
+          check('quiz resets after Try Again', document.querySelectorAll('.quiz-item.is-graded').length === 0);
+
+          /* PASS path — 100% completes + unlocks */
+          $('.quiz-item[data-q="0"] .quiz-opt[data-opt="1"]').click();
+          $('.quiz-item[data-q="1"] .quiz-opt[data-opt="0"]').click();
+          var input = $('.quiz-item[data-q="2"] .quiz-input');
+          input.value = 'fair-code';
+          input.dispatchEvent(new Event('input', { bubbles: true }));
+          $('#quiz-submit').click();
+          check('pass banner shown', !!$('.gate-pass'));
+          check('completed only on 100%', Store.isComplete('n8n-fundamentals', 'what-is-n8n'));
+          check('quiz step recorded', Store.stepState('n8n-fundamentals', 'what-is-n8n').quiz === true);
+          check('next lesson unlocked', Store.isUnlocked('n8n-fundamentals', 'editor-tour'));
+          check('unlock CTA targets next lesson', !!$('.gate-pass a[href*="editor-tour"]'));
+          check('focus bar shows Completed', /Completed/.test($('#focus-bar').textContent));
+          check('score recorded as 100', ((Store.read().scores || {})['n8n-fundamentals/what-is-n8n'] || {}).pct === 100);
+          check('XP awarded', Store.read().xp > 0);
+          var persisted = JSON.parse(localStorage.getItem('n8nacademy.v1') || '{}');
+          check('persisted under legacy key with steps', !!(persisted.steps && persisted.steps['n8n-fundamentals/what-is-n8n']));
+        } catch (e) {
+          log.push('FAIL — exception: ' + ((e && e.stack) || e));
+        }
+        report();
+      });
+    })();
+  </script>
+  <pre id="smoke-report">pending</pre>
+</body>
+</html>

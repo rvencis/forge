@@ -107,6 +107,16 @@
     return flatten(course).reduce(function (sum, e) { return sum + (e.lesson.minutes || 0); }, 0);
   }
 
+  /* Module/lesson numbering for the focus bar: chapter 1, lesson 3 →
+     { module: 1, lesson: 3, display: '1.3', chapter, entry }. */
+  function lessonNumber(course, lessonSlug) {
+    var entry = lessonEntry(course, lessonSlug);
+    if (!entry) return { module: 0, lesson: 0, display: '', chapter: null, entry: null };
+    var mi = (course.chapters || []).indexOf(entry.chapter) + 1;
+    var li = (entry.chapter.lessons || []).indexOf(entry.lesson) + 1;
+    return { module: mi, lesson: li, display: mi + '.' + li, chapter: entry.chapter, entry: entry };
+  }
+
   /* Search + filters for the catalog. sort: default | new | duration | title */
   function search(opts) {
     opts = opts || {};
@@ -156,6 +166,7 @@
     courses: courses, getCourse: getCourse, flatten: flatten, lessonEntry: lessonEntry,
     getLesson: getLesson, getLessonOrStub: getLessonOrStub,
     next: next, prev: prev, firstLesson: firstLesson, totalMinutes: totalMinutes,
+    lessonNumber: lessonNumber,
     search: search, related: related, getPath: getPath, getBadge: getBadge
   };
 })(window);
